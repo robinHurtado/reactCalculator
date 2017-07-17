@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Math Operations</title>
+    <script src="https://unpkg.com/react@15.3.1/dist/react.min.js"></script>
+    <script src="https://unpkg.com/react-dom@15.3.1/dist/react-dom.min.js"></script>
+    <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
+    <style>
+      button{
+        margin-left:5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="calculator"></div>
+    <script type="text/babel">
+
+    class CalculateApp extends React.Component{
+          constructor(props){
+            super(props);
+            this.state = {text: '', opes:[], count: 0};
+            this.handleSubmit = this.handleSubmit.bind(this)
+            this.handleChange = this.handleChange.bind(this)
+            this.handlePrevious = this.handlePrevious.bind(this)
+          }
+
+          componentDidMount(){
+            fetch('/operations')
+            .then(res => res.json())
+            .then(data => {
+              this.setState({opes:data, count: data.length});
+            })
+          }
+
+          handleSubmit(){
+            const objToSend = {
+              operation: this.state.text 
+            }
+
+            fetch('/operation', {
+              method: 'POST',
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(objToSend)
+            })
+            .then(res => res.json())
+            .then(operation => {
+              this.setState({text: operation.result});
+            });
+          }
+
+          handleChange(e){    
+            this.setState({text:e.target.value})
+          }
+
+          handlePrevious(){    
+
+              if (this.state.count === 0) {
+                this.setState({text: "No data"});  
+                return false; 
+              }
+
+              this.setState((prevState) => ({count: prevState.count - 1})) 
+              const opeText = this.state.opes[this.state.count - 1].input;
+              const resultText = this.state.opes[this.state.count - 1].result;
+
+              this.setState({text: opeText + " = " + resultText});     
+          }
+
+          render() {
+            return (
+              <div>
+                <h3>Calculator</h3> 
+                <input id="inputOpe" value={this.state.text} placeholder=" Type 2+2*(9-1)" onChange={this.handleChange} className="input-group-field" type="text" />
+                <button type="button" onClick={this.handleSubmit}>Submit</button>       
+                <button type="button" onClick={this.handlePrevious}>Back</button>             
+              </div>
+            );
+          }
+        }
+
+        ReactDOM.render(
+          <CalculateApp />,
+          document.getElementById('calculator')
+        );
+    </script>
+  </body>
+</html>
